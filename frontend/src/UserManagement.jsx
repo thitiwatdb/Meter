@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -7,7 +8,7 @@ function UserManagement() {
   const [error, setError] = useState(null);
   const [editingUserId, setEditingUserId] = useState(null); // ✅ ID ของ User ที่กำลังแก้ไข
   const [newPassword, setNewPassword] = useState(""); // ✅ เก็บค่ารหัสผ่านใหม่ที่พิมพ์
-
+  const navigate = useNavigate();
 
   
 
@@ -50,9 +51,15 @@ function UserManagement() {
   if (loading) return <p>กำลังโหลดข้อมูล...</p>;
   if (error) return <p>{error}</p>;
 
+  function handleBack() {
+    navigate(-1);
+  }
+
+
   return (
     <div>
       <h1>User Management</h1>
+      <button onClick={handleBack}>Back</button>
       <table border="1" cellPadding="10" style={{ width: "100%", marginTop: "20px" }}>
         <thead>
           <tr>

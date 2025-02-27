@@ -1,0 +1,76 @@
+-- ลบตาราง users หากมีอยู่
+DROP TABLE IF EXISTS users CASCADE;
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    firstname VARCHAR(50) NOT NULL,
+    lastname VARCHAR(50) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(100) NOT NULL,
+    role VARCHAR(50) NOT NULL
+);
+
+-- เพิ่มข้อมูล users
+INSERT INTO users (firstname, lastname, username, password, role) VALUES
+('admin', 'admin', 'admin', '$2b$12$ILL1ELa.A2s289.fdXZ3Be0VfIs/hsTq.a2BuwM9RYkGRuedalOwS', 'admin'),
+('Alice', 'Johnson', 'alicej', '$2b$12$mIuN88IuJzmY/wrtt.oQN.OmoIyo1qAAFrFTe2pf4G3ObD9Rd9rMW', 'user'),
+('Bob', 'Smith', 'bobsmith', '$2b$12$qV4W0cImwWeB5occFVWCCuAT/5Aj9Y6WJgSlOxyLQWQ4jIzo9Mz9y', 'user'),
+('Charlie', 'Brown', 'charlieb', '$2b$12$vXb34TvPy6AV/1QQ6k4EVenFUF.sh6KwWrNMsOG8QF/UL8j4RqDYG', 'user'),
+('David', 'Wilson', 'davidw', '$2b$12$omBIoR6XiETHKlA.TiRK2e4pXC2NloSE3FWYE..BaxzFWNw9A1L6G', 'user'),
+('Eve', 'Taylor', 'evet', '$2b$12$8ZlnSrD0kz7.IK79fr4JZeFbBpp4g6RIRv.YQ5K.GsrlucbjtFrPm', 'user'),
+('Frank', 'Anderson', 'franka', '$2b$12$IOqlCCzU0rGDA/6K6N9jgelJ2ylmM1yc.cY87YKgi0K5SKIOcDTN6', 'user'),
+('Grace', 'Thomas', 'gracet', '$2b$12$PDEz/KbCseXoSEOumjVVg.ZEXeJrzUcpRImcP3DzMQaAx8WNosDdy', 'user'),
+('Hank', 'White', 'hankw', '$2b$12$xKwiRieyYfUODTAhm43Njunk1gtgnKpG5Z2SwcYx6v03ftjugm62u', 'user'),
+('Ivy', 'Harris', 'ivyh', '$2b$12$4XZo9QAxQBke1k6rj9al2u8pUnaqUaY/3YgGF06akqa4LuYWCXRSm', 'user'),
+('Jack', 'Martin', 'jackm', '$2b$12$Da9TKo/VfLvm91.7BEkc/OhyaQebCs06eKG9yim7bTo76KDcUs.kq', 'user'),
+('Chanon', 'Kaewtaweesap', 'chanonk', '$2b$12$wbKnHD3O2YpZXEl3Mh5uN.ujx8Q0HsyyDAXQfJExaG.fl0DooDMMi', 'admin');
+
+-- ลบตาราง rooms หากมีอยู่
+DROP TABLE IF EXISTS rooms CASCADE;
+CREATE TABLE rooms (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(10) UNIQUE NOT NULL
+);
+
+-- เพิ่มข้อมูลห้องพัก
+INSERT INTO rooms (name) VALUES
+('A101'), ('A102'), ('A103'), ('A104'), ('A105'), ('A106'), ('A107'), ('A108'), ('A109'), ('A110');
+
+-- ลบตาราง tenant หากมีอยู่
+DROP TABLE IF EXISTS tenant CASCADE;
+CREATE TABLE tenant (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    room_id INT UNIQUE NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+);
+
+-- เพิ่มข้อมูล tenant
+INSERT INTO tenant (user_id, room_id) VALUES
+(2, 1), (3, 2), (4, 3), (5, 4), (6, 5), (7, 6), (8, 7), (9, 8), (10, 9), (11, 10);
+
+-- ลบตารางการใช้ค่าน้ำและค่าไฟ
+DROP TABLE IF EXISTS utility_usage CASCADE;
+CREATE TABLE utility_usage (
+    id SERIAL PRIMARY KEY,
+    room_id INT NOT NULL,
+    month DATE NOT NULL,
+    water_usage FLOAT NOT NULL,
+    electricity_usage FLOAT NOT NULL,
+    water_cost FLOAT GENERATED ALWAYS AS (water_usage * 30) STORED,
+    electricity_cost FLOAT GENERATED ALWAYS AS (electricity_usage * 8) STORED,
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+);
+
+-- ข้อมูลการใช้ค่าน้ำและค่าไฟย้อนหลัง 3 เดือนและปัจจุบันสำหรับทุกห้อง
+INSERT INTO utility_usage (room_id, month, water_usage, electricity_usage) VALUES
+(1, '2023-11-01', 5.2, 20.5), (1, '2023-12-01', 4.8, 19.8), (1, '2024-01-01', 5.0, 21.0), (1, '2024-02-01', 5.5, 22.3),
+(2, '2023-11-01', 6.1, 22.0), (2, '2023-12-01', 5.9, 21.5), (2, '2024-01-01', 6.2, 23.1), (2, '2024-02-01', 6.5, 24.0),
+(3, '2023-11-01', 4.3, 18.5), (3, '2023-12-01', 4.7, 19.0), (3, '2024-01-01', 5.0, 20.3), (3, '2024-02-01', 5.4, 21.2),
+(4, '2023-11-01', 5.7, 21.2), (4, '2023-12-01', 6.0, 22.0), (4, '2024-01-01', 6.3, 23.5), (4, '2024-02-01', 6.8, 24.8),
+(5, '2023-11-01', 5.0, 20.0), (5, '2023-12-01', 5.5, 21.0), (5, '2024-01-01', 5.9, 22.1), (5, '2024-02-01', 6.2, 23.3),
+(6, '2023-11-01', 4.5, 19.2), (6, '2023-12-01', 4.9, 20.0), (6, '2024-01-01', 5.2, 21.3), (6, '2024-02-01', 5.6, 22.5),
+(7, '2023-11-01', 6.2, 23.0), (7, '2023-12-01', 6.5, 24.2), (7, '2024-01-01', 6.8, 25.5), (7, '2024-02-01', 7.0, 26.8),
+(8, '2023-11-01', 5.1, 20.8), (8, '2023-12-01', 5.4, 21.6), (8, '2024-01-01', 5.7, 22.9), (8, '2024-02-01', 6.0, 24.0),
+(9, '2023-11-01', 6.5, 24.5), (9, '2023-12-01', 6.8, 25.6), (9, '2024-01-01', 7.0, 26.9), (9, '2024-02-01', 7.3, 28.1),
+(10, '2023-11-01', 4.8, 18.9), (10, '2023-12-01', 5.0, 19.5), (10, '2024-01-01', 5.3, 20.7), (10, '2024-02-01', 5.6, 21.8);

@@ -119,23 +119,23 @@ def get_room_data():
         SELECT 
             r.id AS room_id,
             r.name AS room_name,
-            em.data_meter AS electricity_usage,
-            wm.data_meter AS water_usage,
-            u.firstname,
-            u.lastname,
-            u.username
+            COALESCE(uu.electricity_usage, 0) AS electricity_usage,
+            COALESCE(uu.water_usage, 0) AS water_usage,
+            COALESCE(u.firstname, 'ไม่มีข้อมูล') AS firstname,
+            COALESCE(u.lastname, '') AS lastname,
+            COALESCE(u.username, 'ไม่มีผู้ใช้') AS username
         FROM rooms r
-        LEFT JOIN electricity_meter em ON r.id = em.id
-        LEFT JOIN water_meter wm ON r.id = wm.id
-        LEFT JOIN tenant t ON r.id = t.id
-        LEFT JOIN users u ON t.user_id = u.id;
+        LEFT JOIN tenant t ON r.id = t.room_id
+        LEFT JOIN users u ON t.user_id = u.id
+        LEFT JOIN utility_usage uu ON r.id = uu.room_id 
+        AND uu.month = (SELECT MAX(month) FROM utility_usage WHERE room_id = r.id);
     """
     try:
         cursor.execute(room_data_query)
-        all_user_data = cursor.fetchall()
-        print("ข้อมูลห้องที่ดึงมา:", all_user_data)  
+        all_room_data = cursor.fetchall()
+        print("ข้อมูลห้องที่ดึงมา:", all_room_data)
 
-        return jsonify({"status": "success", "rooms": all_user_data})
+        return jsonify({"status": "success", "rooms": all_room_data})
 
     except Exception as e:
         print("ERROR ใน API /admin/roommanagement:", str(e))
