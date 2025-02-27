@@ -7,7 +7,7 @@ import datetime
 import bcrypt
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 SECRET_KEY = "mysecretkey"
 
