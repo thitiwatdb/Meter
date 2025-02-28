@@ -78,13 +78,12 @@ def show_user_data():
         cursor.execute("SELECT id, username, role FROM users ORDER BY id ASC")
         all_users = cursor.fetchall()
         print("All users:", all_users)
-        return jsonify({"status": "success", "users": all_users})  # ✅ เปลี่ยน "user" เป็น "users"
+        return jsonify({"status": "success", "users": all_users})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
-
 
 @app.route("/admin/updatepassword", methods=["POST"])
 def update_password():
@@ -115,37 +114,38 @@ def get_room_data():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
+    # ปรับ query ให้ใช้งานกับ schema ใหม่
     room_data_query = """
         SELECT 
-            r.id AS room_id,
-            r.name AS room_name,
-            COALESCE(uu.electricity_usage, 0) AS electricity_usage,
-            COALESCE(uu.water_usage, 0) AS water_usage,
-            COALESCE(u.firstname, 'ไม่มีข้อมูล') AS firstname,
-            COALESCE(u.lastname, '') AS lastname,
-            COALESCE(u.username, 'ไม่มีผู้ใช้') AS username
-        FROM rooms r
-        LEFT JOIN tenant t ON r.id = t.room_id
-        LEFT JOIN users u ON t.user_id = u.id
-        LEFT JOIN utility_usage uu ON r.id = uu.room_id 
-        AND uu.month = (SELECT MAX(month) FROM utility_usage WHERE room_id = r.id);
+            u.room AS room_id,
+            u.room AS room_name,
+            COALESCE(uu.electricity_reading, 0) AS electricity_usage,
+            COALESCE(uu.water_reading, 0) AS water_usage,
+            COALESCE(u.firstname || ' ' || u.lastname, 'ไม่มีผู้เช่า') AS tenant_name
+        FROM users u
+        LEFT JOIN (
+            SELECT room, electricity_reading, water_reading, record_date
+            FROM utility_usage
+            WHERE (room, record_date) IN (
+                SELECT room, MAX(record_date)
+                FROM utility_usage
+                GROUP BY room
+            )
+        ) uu ON u.room = uu.room
+        WHERE u.room IS NOT NULL
+        ORDER BY u.room ASC;
     """
     try:
         cursor.execute(room_data_query)
         all_room_data = cursor.fetchall()
         print("ข้อมูลห้องที่ดึงมา:", all_room_data)
-
         return jsonify({"status": "success", "rooms": all_room_data})
-
     except Exception as e:
         print("ERROR ใน API /admin/roommanagement:", str(e))
         return jsonify({"status": "error", "message": str(e)}), 500
-
     finally:
         cursor.close()
         conn.close()
-
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

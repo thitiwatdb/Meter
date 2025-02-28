@@ -6,17 +6,15 @@ function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState(null);
-  const [editingUserId, setEditingUserId] = useState(null); // ✅ ID ของ User ที่กำลังแก้ไข
-  const [newPassword, setNewPassword] = useState(""); // ✅ เก็บค่ารหัสผ่านใหม่ที่พิมพ์
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
   const navigate = useNavigate();
-
-  
 
   useEffect(() => {
     axios.get("http://localhost:5000/admin/usermanagement", { withCredentials: true })
       .then(response => {
         console.log("User Data:", response.data);
-        setUsers(response.data.users || []);  // ✅ ป้องกัน users เป็น undefined
+        setUsers(response.data.users || []);
       })
       .catch(error => {
         console.error("Error fetching user data:", error);
@@ -28,14 +26,14 @@ function UserManagement() {
   }, []);
 
   function handleEdit(userId) {
-    setEditingUserId(userId);  // ✅ เก็บ ID ของ User ที่ต้องการแก้ไข
+    setEditingUserId(userId);
   }
 
   function handleSave(){
-    axios.post("http://localhost:5000/admin/updatepassword",{
+    axios.post("http://localhost:5000/admin/updatepassword", {
         id: editingUserId,
         newPassword: newPassword
-    },{withCredentials: true})
+    }, { withCredentials: true })
     .then(response => {
         console.log("Password updated:", response.data);
         alert("เปลี่ยนรหัสผ่านสำเร็จ");
@@ -43,7 +41,7 @@ function UserManagement() {
         setNewPassword("");
     })
     .catch(error => {
-        console.error("Error updating password",error);
+        console.error("Error updating password", error);
         alert("เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน");
     })
   }
@@ -54,7 +52,6 @@ function UserManagement() {
   function handleBack() {
     navigate(-1);
   }
-
 
   return (
     <div>
@@ -77,26 +74,26 @@ function UserManagement() {
                 <td>{user.username}</td>
                 <td>{user.role}</td>
                 <td>
-                    {editingUserId === user.id ? (
-                        <>
-                        <input
-                            type="password"
-                            placeholder="New Password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                        />
-                        <button onClick={handleSave}>Save</button>
-                        <button onClick={() => setEditingUserId(null)}>Cancel</button>
-                        </>
-                    ):(
-                        <button onClick={() => handleEdit(user.id)}>Edit</button>
-                    )}
+                  {editingUserId === user.id ? (
+                    <>
+                      <input
+                        type="password"
+                        placeholder="New Password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                      <button onClick={handleSave}>Save</button>
+                      <button onClick={() => setEditingUserId(null)}>Cancel</button>
+                    </>
+                  ) : (
+                    <button onClick={() => handleEdit(user.id)}>Edit</button>
+                  )}
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="3" style={{ textAlign: "center" }}>ไม่มีข้อมูลผู้ใช้</td>
+              <td colSpan="4" style={{ textAlign: "center" }}>ไม่มีข้อมูลผู้ใช้</td>
             </tr>
           )}
         </tbody>
