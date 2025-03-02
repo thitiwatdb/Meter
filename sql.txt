@@ -17,7 +17,7 @@ CREATE TABLE users (
 -- เพิ่มข้อมูลลงในตาราง users
 -- กำหนดให้ admin ไม่มีห้อง ส่วนผู้ใช้รายอื่นจะได้รับหมายเลขห้องตามลำดับ
 INSERT INTO users (firstname, lastname, username, password, role, room) VALUES
-('admin', 'admin', 'admin', '$2b$12$ILL1ELa.A2s289.fdXZ3Be0VfIs/hsTq.a2BuwM9RYkGRuedalOwS', 'admin', NULL),
+('admin', 'admin', 'admin', '$2b$12$eiF.wyLSCDDFOl4Q4fDT2u4fpYv6LIjme8Cql7zcjA1JVUrPWpHi.', 'admin', NULL),
 ('Alice', 'Johnson', 'alicej', '$2b$12$mIuN88IuJzmY/wrtt.oQN.OmoIyo1qAAFrFTe2pf4G3ObD9Rd9rMW', 'user', 'A101'),
 ('Bob', 'Smith', 'bobsmith', '$2b$12$qV4W0cImwWeB5occFVWCCuAT/5Aj9Y6WJgSlOxyLQWQ4jIzo9Mz9y', 'user', 'A102'),
 ('Charlie', 'Brown', 'charlieb', '$2b$12$vXb34TvPy6AV/1QQ6k4EVenFUF.sh6KwWrNMsOG8QF/UL8j4RqDYG', 'user', 'A103'),

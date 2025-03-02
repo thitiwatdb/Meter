@@ -24,6 +24,7 @@ def login():
     data = request.json
     username = data.get("username")
     password = data.get("password")
+    print("abc",data)
 
     if not username or not password:
         return jsonify({"status": "error", "message": "กรุณากรอก username และ password"}), 400
