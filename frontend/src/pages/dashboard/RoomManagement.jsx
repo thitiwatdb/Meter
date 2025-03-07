@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function RoomManagement() {
-  const [rooms, setRooms] = useState([]);  // ✅ ใช้เก็บข้อมูลห้องที่ดึงมา
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get("http://localhost:5000/admin/roommanagement", { withCredentials: true })
       .then(response => {
         console.log("Room Data:", response.data);
-        setRooms(response.data.rooms || []);  // ✅ เปลี่ยนจาก `users` → `rooms`
+        setRooms(response.data.rooms || []);
       })
       .catch(error => {
         console.error("Error fetching room data:", error);
@@ -24,13 +26,18 @@ function RoomManagement() {
   if (loading) return <p>กำลังโหลดข้อมูล...</p>;
   if (error) return <p>{error}</p>;
 
+  function handleBack(){
+    navigate(-1);
+  }
+
   return (
     <div>
       <h1>Room Management</h1>
+      <button onClick={handleBack}>Back</button>
       <table border="1" cellPadding="10" style={{ width: "100%", marginTop: "20px" }}>
         <thead>
           <tr>
-            <th>ID</th>
+            <th>Room ID</th>
             <th>Room Name</th>
             <th>Electricity Usage</th>
             <th>Water Usage</th>
@@ -45,7 +52,7 @@ function RoomManagement() {
                 <td>{room.room_name}</td>
                 <td>{room.electricity_usage}</td>
                 <td>{room.water_usage}</td>
-                <td>{room.firstname ? `${room.firstname} ${room.lastname}` : "ไม่มีผู้เช่า"}</td>
+                <td>{room.tenant_name}</td>
               </tr>
             ))
           ) : (

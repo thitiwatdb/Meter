@@ -9,24 +9,21 @@ function LoginPage({ setUsername, setRole }) {
   const navigate = useNavigate();
 
   function handleLogin() {
+    console.log("Logging in with:", inputUsername, password);
     axios
-      .post(
-        "http://localhost:5000/login",
-        { username: inputUsername, password },
-        { withCredentials: true }
-      )
+      .post("http://localhost:5000/login", { username: inputUsername, password }, { withCredentials: true })
       .then((response) => {
         console.log("API Response:", response.data);
         if (response.data.status === "success") {
           console.log("Navigating to admin");
           alert("ล็อกอินสำเร็จ");
-
+  
           localStorage.setItem("username", response.data.username);
           localStorage.setItem("role", response.data.role);
-
+  
           setUsername(response.data.username);
           setRole(response.data.role);
-
+  
           if (response.data.role === "admin") {
             navigate("/admin");
           } else {
@@ -34,8 +31,12 @@ function LoginPage({ setUsername, setRole }) {
           }
         }
       })
-      .catch(() => {});
+      .catch((error) => {
+        console.error("Login failed:", error.response ? error.response.data : error.message);
+        setMessage("Login failed. Please check your username and password.");
+      });
   }
+  
 
   return (
     <>
