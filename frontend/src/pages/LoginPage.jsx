@@ -42,7 +42,7 @@ function LoginPage({ setUsername, setRole }) {
       <div className="mx-auto h-screen flex items-center justify-between p-4 bg-blue-400">
         <div
           className=" container flex-col items-center max-w-sm bg-blue-200 mx-auto rounded-xl shadow-lg outline-black p-30
-      gap-x-4"
+      gap-x-4 md:max-md:" 
         >
           <div className=" flex justify-center p-4 text-">
             <input
