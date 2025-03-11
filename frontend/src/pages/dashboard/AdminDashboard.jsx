@@ -35,9 +35,9 @@ function AdminDashboard({ username, role, setUsername, setRole }) {
       <h1>Admin Dashboard</h1>
       <p>ยินดีต้อนรับ, {username || "ผู้ดูแลระบบ"} 🎉</p>
       <p>Role: {role}</p>
-      <button onClick={handleLogout}>Logout</button>
       <button onClick={handleUsermanagement}>User Management</button>
       <button onClick={handleRoommanagement}>Room Management</button>
+      <button onClick={handleLogout}>Logout</button>
     </div>
   );
 }

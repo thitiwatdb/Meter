@@ -1,79 +1,86 @@
 -- ลบตารางที่เกี่ยวข้อง (ถ้ามีอยู่แล้ว)
 DROP TABLE IF EXISTS utility_usage CASCADE;
+DROP TABLE IF EXISTS rooms CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS rooms CASCADE;  -- ตาราง rooms ถูกลบออก
 
--- สร้างตาราง users โดยเพิ่มคอลัมน์ room (admin ไม่มีห้อง จึงเป็น NULL)
+-- สร้างตาราง users (user สามารถมีหลายห้อง)
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     firstname VARCHAR(50) NOT NULL,
     lastname VARCHAR(50) NOT NULL,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(100) NOT NULL,
-    role VARCHAR(50) NOT NULL,
-    room VARCHAR(10) UNIQUE  -- รหัสห้อง เช่น A101, A102 ... สำหรับ user ที่มีห้อง; admin จะเป็น NULL
+    role VARCHAR(50) NOT NULL  -- 'admin' หรือ 'user'
 );
 
--- เพิ่มข้อมูลลงในตาราง users
--- กำหนดให้ admin ไม่มีห้อง ส่วนผู้ใช้รายอื่นจะได้รับหมายเลขห้องตามลำดับ
-INSERT INTO users (firstname, lastname, username, password, role, room) VALUES
-('admin', 'admin', 'admin', '$2b$12$eiF.wyLSCDDFOl4Q4fDT2u4fpYv6LIjme8Cql7zcjA1JVUrPWpHi.', 'admin', NULL),
-('Alice', 'Johnson', 'alicej', '$2b$12$mIuN88IuJzmY/wrtt.oQN.OmoIyo1qAAFrFTe2pf4G3ObD9Rd9rMW', 'user', 'A101'),
-('Bob', 'Smith', 'bobsmith', '$2b$12$qV4W0cImwWeB5occFVWCCuAT/5Aj9Y6WJgSlOxyLQWQ4jIzo9Mz9y', 'user', 'A102'),
-('Charlie', 'Brown', 'charlieb', '$2b$12$vXb34TvPy6AV/1QQ6k4EVenFUF.sh6KwWrNMsOG8QF/UL8j4RqDYG', 'user', 'A103'),
-('David', 'Wilson', 'davidw', '$2b$12$omBIoR6XiETHKlA.TiRK2e4pXC2NloSE3FWYE..BaxzFWNw9A1L6G', 'user', 'A104'),
-('Eve', 'Taylor', 'evet', '$2b$12$8ZlnSrD0kz7.IK79fr4JZeFbBpp4g6RIRv.YQ5K.GsrlucbjtFrPm', 'user', 'A105'),
-('Frank', 'Anderson', 'franka', '$2b$12$IOqlCCzU0rGDA/6K6N9jgelJ2ylmM1yc.cY87YKgi0K5SKIOcDTN6', 'user', 'A106'),
-('Grace', 'Thomas', 'gracet', '$2b$12$PDEz/KbCseXoSEOumjVVg.ZEXeJrzUcpRImcP3DzMQaAx8WNosDdy', 'user', 'A107'),
-('Hank', 'White', 'hankw', '$2b$12$xKwiRieyYfUODTAhm43Njunk1gtgnKpG5Z2SwcYx6v03ftjugm62u', 'user', 'A108');
+-- สร้างตาราง rooms (รองรับหลายห้องต่อผู้ใช้)
+CREATE TABLE rooms (
+    id SERIAL PRIMARY KEY,
+    room_code VARCHAR(10) UNIQUE NOT NULL,  -- เช่น A101, A102
+    user_id INT REFERENCES users(id) ON DELETE SET NULL -- ผู้ใช้ที่เป็นเจ้าของห้อง
+);
 
--- สร้างตาราง utility_usage ใหม่โดยเปลี่ยนคอลัมน์ room_id เป็น room (VARCHAR)
+-- สร้างตาราง utility_usage (เชื่อมกับ rooms)
 CREATE TABLE utility_usage (
     id SERIAL PRIMARY KEY,
-    room VARCHAR(10) NOT NULL,  -- รหัสห้อง เช่น A101, A102 ...
+    room_id INT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,  -- เชื่อมกับ rooms
     record_date DATE NOT NULL,
     water_reading FLOAT NOT NULL,
     electricity_reading INT NOT NULL
 );
 
--- เพิ่มข้อมูลการใช้น้ำ-ไฟให้กับแต่ละห้อง (สำหรับผู้ใช้ที่มีห้อง)
--- โดยอิงจากการแมป: A101 สำหรับ Alice, A102 สำหรับ Bob, ... , A108 สำหรับ Hank
-INSERT INTO utility_usage (room, record_date, water_reading, electricity_reading) VALUES
--- ข้อมูลสำหรับห้อง A101 (Alice)
-('A101', '2023-11-30', 10.5, 15700),
-('A101', '2023-12-31', 11.0, 16000),
-('A101', '2024-01-31', 11.8, 16350),
--- ข้อมูลสำหรับห้อง A102 (Bob)
-('A102', '2023-11-30', 9.8, 14500),
-('A102', '2023-12-31', 10.2, 14800),
-('A102', '2024-01-31', 10.9, 15200),
--- ข้อมูลสำหรับห้อง A103 (Charlie)
-('A103', '2023-11-30', 12.0, 16500),
-('A103', '2023-12-31', 12.5, 16800),
-('A103', '2024-01-31', 13.1, 17100),
--- ข้อมูลสำหรับห้อง A104 (David)
-('A104', '2023-11-30', 11.3, 15800),
-('A104', '2023-12-31', 11.7, 16100),
-('A104', '2024-01-31', 12.4, 16450),
--- ข้อมูลสำหรับห้อง A105 (Eve)
-('A105', '2023-11-30', 10.2, 15000),
-('A105', '2023-12-31', 10.7, 15300),
-('A105', '2024-01-31', 11.3, 15700),
--- ข้อมูลสำหรับห้อง A106 (Frank)
-('A106', '2023-11-30', 9.5, 14000),
-('A106', '2023-12-31', 10.0, 14350),
-('A106', '2024-01-31', 10.6, 14700),
--- ข้อมูลสำหรับห้อง A107 (Grace)
-('A107', '2023-11-30', 13.0, 17000),
-('A107', '2023-12-31', 13.5, 17350),
-('A107', '2024-01-31', 14.2, 17700),
--- ข้อมูลสำหรับห้อง A108 (Hank)
-('A108', '2023-11-30', 12.8, 16850),
-('A108', '2023-12-31', 13.2, 17200),
-('A108', '2024-01-31', 13.9, 17600);
+-- เพิ่มข้อมูลลงในตาราง users
+INSERT INTO users (firstname, lastname, username, password, role) VALUES
+('admin', 'admin', 'admin', '$2b$12$eiF.wyLSCDDFOl4Q4fDT2u4fpYv6LIjme8Cql7zcjA1JVUrPWpHi.', 'admin'),
+('Alice', 'Johnson', 'alicej', '$2b$12$mIuN88IuJzmY/wrtt.oQN.OmoIyo1qAAFrFTe2pf4G3ObD9Rd9rMW', 'user'),
+('Bob', 'Smith', 'bobsmith', '$2b$12$qV4W0cImwWeB5occFVWCCuAT/5Aj9Y6WJgSlOxyLQWQ4jIzo9Mz9y', 'user'),
+('Charlie', 'Brown', 'charlieb', '$2b$12$vXb34TvPy6AV/1QQ6k4EVenFUF.sh6KwWrNMsOG8QF/UL8j4RqDYG', 'user'),
+('David', 'Wilson', 'davidw', '$2b$12$omBIoR6XiETHKlA.TiRK2e4pXC2NloSE3FWYE..BaxzFWNw9A1L6G', 'user'),
+('Eve', 'Taylor', 'evet', '$2b$12$8ZlnSrD0kz7.IK79fr4JZeFbBpp4g6RIRv.YQ5K.GsrlucbjtFrPm', 'user'),
+('Frank', 'Anderson', 'franka', '$2b$12$IOqlCCzU0rGDA/6K6N9jgelJ2ylmM1yc.cY87YKgi0K5SKIOcDTN6', 'user'),
+('Grace', 'Thomas', 'gracet', '$2b$12$PDEz/KbCseXoSEOumjVVg.ZEXeJrzUcpRImcP3DzMQaAx8WNosDdy', 'user'),
+('Hank', 'White', 'hankw', '$2b$12$xKwiRieyYfUODTAhm43Njunk1gtgnKpG5Z2SwcYx6v03ftjugm62u', 'user');
 
--- แสดงข้อมูลทั้งหมดในตาราง users
-SELECT * FROM users;
+-- เพิ่มข้อมูลลงในตาราง rooms (ผู้ใช้แต่ละคนมีห้องเป็นของตัวเอง และสามารถมีหลายห้องได้)
+INSERT INTO rooms (room_code, user_id) VALUES
+('A101', 2), -- Alice
+('A102', 3), -- Bob
+('A103', 4), -- Charlie
+('A104', NULL), -- David
+('A105', 6), -- Eve
+('A106', 7), -- Frank
+('A107', 8), -- Grace
+('A108', 8); -- Hank
 
--- แสดงข้อมูลทั้งหมดในตาราง utility_usage
-SELECT * FROM utility_usage;
+INSERT INTO utility_usage (room_id, record_date, water_reading, electricity_reading)
+SELECT id, DATE '2023-11-30', 10.5, 15700 FROM rooms WHERE room_code = 'A101' UNION ALL
+SELECT id, DATE '2023-12-31', 11.0, 16000 FROM rooms WHERE room_code = 'A101' UNION ALL
+SELECT id, DATE '2024-01-31', 11.8, 16350 FROM rooms WHERE room_code = 'A101' UNION ALL
+
+SELECT id, DATE '2023-11-30', 9.8, 14500 FROM rooms WHERE room_code = 'A102' UNION ALL
+SELECT id, DATE '2023-12-31', 10.2, 14800 FROM rooms WHERE room_code = 'A102' UNION ALL
+SELECT id, DATE '2024-01-31', 10.9, 15200 FROM rooms WHERE room_code = 'A102' UNION ALL
+
+SELECT id, DATE '2023-11-30', 12.0, 16500 FROM rooms WHERE room_code = 'A103' UNION ALL
+SELECT id, DATE '2023-12-31', 12.5, 16800 FROM rooms WHERE room_code = 'A103' UNION ALL
+SELECT id, DATE '2024-01-31', 13.1, 17100 FROM rooms WHERE room_code = 'A103' UNION ALL
+
+SELECT id, DATE '2023-11-30', 11.3, 15800 FROM rooms WHERE room_code = 'A104' UNION ALL
+SELECT id, DATE '2023-12-31', 11.7, 16100 FROM rooms WHERE room_code = 'A104' UNION ALL
+SELECT id, DATE '2024-01-31', 12.4, 16450 FROM rooms WHERE room_code = 'A104' UNION ALL
+
+SELECT id, DATE '2023-11-30', 10.2, 15000 FROM rooms WHERE room_code = 'A105' UNION ALL
+SELECT id, DATE '2023-12-31', 10.7, 15300 FROM rooms WHERE room_code = 'A105' UNION ALL
+SELECT id, DATE '2024-01-31', 11.3, 15700 FROM rooms WHERE room_code = 'A105' UNION ALL
+
+SELECT id, DATE '2023-11-30', 9.5, 14000 FROM rooms WHERE room_code = 'A106' UNION ALL
+SELECT id, DATE '2023-12-31', 10.0, 14350 FROM rooms WHERE room_code = 'A106' UNION ALL
+SELECT id, DATE '2024-01-31', 10.6, 14700 FROM rooms WHERE room_code = 'A106' UNION ALL
+
+SELECT id, DATE '2023-11-30', 13.0, 17000 FROM rooms WHERE room_code = 'A107' UNION ALL
+SELECT id, DATE '2023-12-31', 13.5, 17350 FROM rooms WHERE room_code = 'A107' UNION ALL
+SELECT id, DATE '2024-01-31', 14.2, 17700 FROM rooms WHERE room_code = 'A107' UNION ALL
+
+SELECT id, DATE '2023-11-30', 12.8, 16850 FROM rooms WHERE room_code = 'A108' UNION ALL
+SELECT id, DATE '2023-12-31', 13.2, 17200 FROM rooms WHERE room_code = 'A108' UNION ALL
+SELECT id, DATE '2024-01-31', 13.9, 17600 FROM rooms WHERE room_code = 'A108';

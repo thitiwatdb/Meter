@@ -115,26 +115,24 @@ def get_room_data():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-    # ปรับ query ให้ใช้งานกับ schema ใหม่
     room_data_query = """
         SELECT 
-            u.room AS room_id,
-            u.room AS room_name,
+            r.id AS room_id,
+            r.room_code AS room_name,
             COALESCE(uu.electricity_reading, 0) AS electricity_usage,
             COALESCE(uu.water_reading, 0) AS water_usage,
-            COALESCE(u.firstname || ' ' || u.lastname, 'ไม่มีผู้เช่า') AS tenant_name
-        FROM users u
+            'ไม่มีผู้เช่า' AS tenant_name  -- ใส่เป็นดีฟอลต์ไปก่อน
+        FROM rooms r
         LEFT JOIN (
-            SELECT room, electricity_reading, water_reading, record_date
+            SELECT room_id, electricity_reading, water_reading, record_date
             FROM utility_usage
-            WHERE (room, record_date) IN (
-                SELECT room, MAX(record_date)
+            WHERE (room_id, record_date) IN (
+                SELECT room_id, MAX(record_date)
                 FROM utility_usage
-                GROUP BY room
+                GROUP BY room_id
             )
-        ) uu ON u.room = uu.room
-        WHERE u.room IS NOT NULL
-        ORDER BY u.room ASC;
+        ) uu ON r.id = uu.room_id
+        ORDER BY r.id ASC;
     """
     try:
         cursor.execute(room_data_query)
@@ -143,6 +141,69 @@ def get_room_data():
         return jsonify({"status": "success", "rooms": all_room_data})
     except Exception as e:
         print("ERROR ใน API /admin/roommanagement:", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route("/admin/adduser", methods=["POST"])
+def add_user():
+    data = request.json
+    firstname = data.get("firstname")
+    lastname = data.get("lastname")
+    username = data.get("username")
+    password = data.get("password")
+    role = data.get("role")
+
+    if not firstname or not lastname or not username or not password or not role:
+        return jsonify({"status": "error", "message": "กรุณากรอกข้อมูลให้ครบถ้วน (firstname, lastname, username, password, role)"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    try:
+        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
+        if cursor.fetchone():
+            return jsonify({"status": "error", "message": "ผู้ใช้มีอยู่แล้ว"}), 400
+
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        cursor.execute(
+            "INSERT INTO users (firstname, lastname, username, role, password) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+            (firstname, lastname, username, role, hashed_password)
+        )
+        new_user = cursor.fetchone()
+        conn.commit()
+        return jsonify({
+            "status": "success",
+            "message": "เพิ่มผู้ใช้สำเร็จ",
+            "user_id": new_user["id"]
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+@app.route("/admin/deleteuser", methods=["DELETE"])
+def delete_user():
+    data = request.json
+    user_id = data.get("id")
+    
+    if not user_id:
+        return jsonify({"status": "error", "message": "กรุณาระบุรหัสผู้ใช้ (id) ที่ต้องการลบ"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        conn.commit()
+        if cursor.rowcount == 0:
+            return jsonify({"status": "error", "message": "ไม่พบผู้ใช้ที่มีรหัสนี้"}), 404
+        return jsonify({"status": "success", "message": "ลบผู้ใช้สำเร็จ"})
+    except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
     finally:
         cursor.close()
