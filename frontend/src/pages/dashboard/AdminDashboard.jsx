@@ -44,12 +44,12 @@ function AdminDashboard({ username, role, setUsername, setRole }) {
           <div className="p-5 bg-blue-700 shadow-md rounded-md">
             <h1 className="text-2xl text-white font-bold">Admin Dashboard</h1>
           </div>
-          <div className="m-1 p-5 bg-blue-500 shadow-md rounded-md flex flex-row justify-between text-white">
+          <div className="m-1 p-2 bg-white shadow-md rounded-md flex flex-row justify-between text-blue-500">
             <div className="font-bold">
               <h1>ยินดีต้อนรับ, {username || "ผู้ดูแลระบบ"} 🎉</h1>
               <h1>Role: {role}</h1>
             </div>
-            <div className="grid grid-cols-4 gap-5 text-xl text-white">
+            <div className="grid grid-cols-4 gap-5 text-xl text-blue-500">
               <button
                 className=" hover:animate-bounce hover:text-blue-800"
                 onClick={handleUsermanagement}
@@ -76,6 +76,9 @@ function AdminDashboard({ username, role, setUsername, setRole }) {
               </button>
             </div>
           </div>
+        </div>
+        <div className=" container m-10">
+          <div className="text-center">Dashboard</div>
         </div>
       </div>
     </>
