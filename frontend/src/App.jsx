@@ -5,6 +5,7 @@ import UserDashboard from "./pages/dashboard/UserDashboard";
 import LoginPage from "./pages/LoginPage";
 import UserManagement from "./pages/dashboard/UserManagement";
 import RoomManagement from "./pages/dashboard/RoomManagement";
+import UploadImages from "./pages/dashboard/UploadImages";
 
 function App() {
   const [username, setUsername] = useState(
@@ -52,6 +53,10 @@ function App() {
           element={
             <RoomManagement setUsername={setUsername} setRole={setRole} />
           }
+        />
+        <Route
+          path="/admin/uploadimages"
+          element={<UploadImages setUsername={setUsername} setRole={setRole} />}
         />
       </Routes>
     </Router>
