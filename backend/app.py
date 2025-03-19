@@ -112,39 +112,55 @@ def update_password():
 
 @app.route("/admin/roommanagement", methods=["GET"])
 def get_room_data():
+    month = request.args.get("month", "")
+
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-    room_data_query = """
-        SELECT 
-            r.id AS room_id,
-            r.room_code AS room_name,
-            COALESCE(uu.electricity_reading, 0) AS electricity_usage,
-            COALESCE(uu.water_reading, 0) AS water_usage,
-            'ไม่มีผู้เช่า' AS tenant_name  -- ใส่เป็นดีฟอลต์ไปก่อน
-        FROM rooms r
-        LEFT JOIN (
-            SELECT room_id, electricity_reading, water_reading, record_date
-            FROM utility_usage
-            WHERE (room_id, record_date) IN (
-                SELECT room_id, MAX(record_date)
+    if month:  # ถ้าเลือกเดือน ให้กรองข้อมูลตามเดือนนั้น
+        room_data_query = """
+            SELECT 
+                r.id AS room_id,
+                r.room_code AS room_name,
+                COALESCE(uu.electricity_reading, 0) AS electricity_usage,
+                COALESCE(uu.water_reading, 0) AS water_usage,
+                COALESCE(CONCAT(u.firstname, ' ', u.lastname), 'ไม่มีผู้เช่า') AS tenant_name
+            FROM rooms r
+            LEFT JOIN (
+                SELECT room_id, electricity_reading, water_reading, record_date
                 FROM utility_usage
-                GROUP BY room_id
-            )
-        ) uu ON r.id = uu.room_id
-        ORDER BY r.id ASC;
-    """
-    try:
+                WHERE TO_CHAR(record_date, 'YYYY-MM') = %s
+            ) uu ON r.id = uu.room_id
+            LEFT JOIN users u ON r.user_id = u.id
+            ORDER BY r.id ASC;
+        """
+        cursor.execute(room_data_query, (month,))
+    
+    else:  # ถ้าเลือก "ทั้งหมด" ให้ดึงข้อมูลล่าสุดของแต่ละห้อง
+        room_data_query = """
+            SELECT 
+                r.id AS room_id,
+                r.room_code AS room_name,
+                COALESCE(uu.electricity_reading, 0) AS electricity_usage,
+                COALESCE(uu.water_reading, 0) AS water_usage,
+                COALESCE(CONCAT(u.firstname, ' ', u.lastname), 'ไม่มีผู้เช่า') AS tenant_name
+            FROM rooms r
+            LEFT JOIN (
+                SELECT DISTINCT ON (room_id) room_id, electricity_reading, water_reading, record_date
+                FROM utility_usage
+                ORDER BY room_id, record_date DESC
+            ) uu ON r.id = uu.room_id
+            LEFT JOIN users u ON r.user_id = u.id
+            ORDER BY r.id ASC;
+        """
         cursor.execute(room_data_query)
-        all_room_data = cursor.fetchall()
-        print("ข้อมูลห้องที่ดึงมา:", all_room_data)
-        return jsonify({"status": "success", "rooms": all_room_data})
-    except Exception as e:
-        print("ERROR ใน API /admin/roommanagement:", str(e))
-        return jsonify({"status": "error", "message": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
+
+    all_room_data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"status": "success", "rooms": all_room_data})
+
 
 @app.route("/admin/adduser", methods=["POST"])
 def add_user():

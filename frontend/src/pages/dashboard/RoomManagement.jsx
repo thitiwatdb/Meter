@@ -6,27 +6,40 @@ function RoomManagement() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(""); // เก็บเดือนที่เลือก
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:5000/admin/roommanagement", { withCredentials: true })
-      .then(response => {
-        console.log("Room Data:", response.data);
+    fetchRoomData();
+  }, [selectedMonth]); // เรียก API ใหม่เมื่อเปลี่ยนเดือน
+
+  const fetchRoomData = () => {
+    setLoading(true);
+    console.log("📡 กำลังเรียก API กับเดือน:", selectedMonth || "ทั้งหมด");
+  
+    axios
+      .get("http://localhost:5000/admin/roommanagement", {
+        params: { month: selectedMonth || null }, // ส่งค่า null ถ้าเลือก "ทั้งหมด"
+        withCredentials: true,
+      })
+      .then((response) => {
+        console.log("📡 ข้อมูลจาก API:", response.data);
         setRooms(response.data.rooms || []);
       })
-      .catch(error => {
-        console.error("Error fetching room data:", error);
+      .catch((error) => {
+        console.error("❌ Error fetching room data:", error);
         setError("ไม่สามารถโหลดข้อมูลห้องพักได้");
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  };
+  
 
   if (loading) return <p>กำลังโหลดข้อมูล...</p>;
   if (error) return <p>{error}</p>;
 
-  function handleBack(){
+  function handleBack() {
     navigate(-1);
   }
 
@@ -34,6 +47,21 @@ function RoomManagement() {
     <div>
       <h1>Room Management</h1>
       <button onClick={handleBack}>Back</button>
+
+      {/* ตัวเลือกเดือน */}
+      <div style={{ marginTop: "20px" }}>
+        <label>เลือกเดือน: </label>
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+        >
+          <option value="">ทั้งหมด</option>
+          <option value="2023-11">พฤศจิกายน 2023</option>
+          <option value="2023-12">ธันวาคม 2023</option>
+          <option value="2024-01">มกราคม 2024</option>
+        </select>
+      </div>
+
       <table border="1" cellPadding="10" style={{ width: "100%", marginTop: "20px" }}>
         <thead>
           <tr>
@@ -46,7 +74,7 @@ function RoomManagement() {
         </thead>
         <tbody>
           {rooms.length > 0 ? (
-            rooms.map(room => (
+            rooms.map((room) => (
               <tr key={room.room_id}>
                 <td>{room.room_id}</td>
                 <td>{room.room_name}</td>
