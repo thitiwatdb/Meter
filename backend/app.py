@@ -5,6 +5,9 @@ from flask_cors import CORS
 import jwt
 import datetime
 import bcrypt
+import os
+from ultralytics import YOLO
+
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
@@ -221,6 +224,101 @@ def delete_user():
         return jsonify({"status": "success", "message": "ลบผู้ใช้สำเร็จ"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+MODEL_PATH = r"C:\Users\CHANON\Desktop\train_by_yolo\best.pt"
+model = YOLO(MODEL_PATH)
+
+@app.route("/detect", methods=["POST"])
+def detect():
+    if "image" not in request.files:
+        return jsonify({"status": "error", "message": "ไม่มีไฟล์รูปภาพในคำขอ"}), 400
+
+    file = request.files["image"]
+    if file.filename == "":
+        return jsonify({"status": "error", "message": "ไม่ได้เลือกไฟล์"}), 400
+
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+
+    results = model.predict(source=file_path, conf=0.5)
+    labels_with_positions = []
+    for result in results:
+        for box in result.boxes:
+            x_center = int((box.xywh[:, 0]).item())
+            label = result.names[int(box.cls[0].item())]
+            labels_with_positions.append((x_center, label))
+    
+    sorted_labels = sorted(labels_with_positions, key=lambda x: x[0])
+    sorted_label_names = [label for _, label in sorted_labels]
+    concatenated_labels = ''.join(sorted_label_names)
+    numeric_label = int(concatenated_labels) if concatenated_labels.isdigit() else None
+
+    os.remove(file_path)
+
+    return jsonify({
+        "status": "success",
+        "detections": {
+            "sorted_labels": sorted_label_names,
+            "concatenated_labels": concatenated_labels,
+            "numeric_value": numeric_label
+        }
+    })
+
+# --- Endpoint สำหรับบันทึกข้อมูลมิเตอร์ลงฐานข้อมูล ---
+@app.route("/insert_reading", methods=["POST"])
+def insert_reading():
+    data = request.json
+    room_code = data.get("room_code")
+    meter_type = data.get("meter_type")
+    record_date = data.get("record_date")
+    reading_value = data.get("reading_value")
+
+    if not room_code or not meter_type or not record_date or reading_value is None:
+        return jsonify({"status": "error", "message": "ข้อมูลไม่ครบถ้วน"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        # ค้นหา room_id จากตาราง rooms โดยใช้ room_code
+        cursor.execute("SELECT id FROM rooms WHERE room_code = %s", (room_code,))
+        room = cursor.fetchone()
+        if not room:
+            return jsonify({"status": "error", "message": "ไม่พบห้องที่เลือก"}), 404
+        room_id = room["id"]
+
+        # ใช้ UPSERT (INSERT ON CONFLICT) ตามประเภทมิเตอร์
+        if meter_type == "water":
+            query = """
+                INSERT INTO utility_usage (room_id, record_date, water_reading)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (room_id, record_date)
+                DO UPDATE SET water_reading = EXCLUDED.water_reading
+            """
+            cursor.execute(query, (room_id, record_date, reading_value))
+
+        elif meter_type == "electricity":
+            query = """
+                INSERT INTO utility_usage (room_id, record_date, electricity_reading)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (room_id, record_date)
+                DO UPDATE SET electricity_reading = EXCLUDED.electricity_reading
+            """
+            cursor.execute(query, (room_id, record_date, reading_value))
+
+        else:
+            return jsonify({"status": "error", "message": "meter_type ไม่ถูกต้อง"}), 400
+
+        conn.commit()
+        return jsonify({"status": "success", "message": "บันทึกหรืออัปเดตข้อมูลสำเร็จ"})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
     finally:
         cursor.close()
         conn.close()

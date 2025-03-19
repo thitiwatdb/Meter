@@ -23,11 +23,15 @@ CREATE TABLE rooms (
 -- สร้างตาราง utility_usage (เชื่อมกับ rooms)
 CREATE TABLE utility_usage (
     id SERIAL PRIMARY KEY,
-    room_id INT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,  -- เชื่อมกับ rooms
+    room_id INT NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
     record_date DATE NOT NULL,
-    water_reading FLOAT NOT NULL,
-    electricity_reading INT NOT NULL
+    water_reading FLOAT NULL,
+    electricity_reading FLOAT NULL
 );
+
+ALTER TABLE utility_usage
+ADD CONSTRAINT unique_roomid_recorddate
+UNIQUE (room_id, record_date);
 
 -- เพิ่มข้อมูลลงในตาราง users
 INSERT INTO users (firstname, lastname, username, password, role) VALUES
