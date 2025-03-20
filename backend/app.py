@@ -230,7 +230,7 @@ def delete_user():
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-MODEL_PATH = r"C:\Users\CHANON\Desktop\train_by_yolo\best.pt"
+MODEL_PATH = r"backend\best.pt"
 model = YOLO(MODEL_PATH)
 
 @app.route("/detect", methods=["POST"])
