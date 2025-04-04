@@ -27,7 +27,6 @@ def login():
     data = request.json
     username = data.get("username")
     password = data.get("password")
-    print("abc:",data)
 
     if not username or not password:
         return jsonify({"status": "error", "message": "กรุณากรอก username และ password"}), 400
@@ -48,8 +47,8 @@ def login():
                 "role": user["role"],
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
             }, SECRET_KEY, algorithm="HS256")
-
             response = make_response(jsonify({"status": "success", "username": user["username"], "role": user["role"]}))
+            print(response)
             response.set_cookie("token", token, httponly=True, secure=True, samesite="Strict")
             return response
         else:
@@ -120,7 +119,7 @@ def get_room_data():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-    if month:  # ถ้าเลือกเดือน ให้กรองข้อมูลตามเดือนนั้น
+    if month:
         room_data_query = """
             SELECT 
                 r.id AS room_id,
@@ -139,7 +138,7 @@ def get_room_data():
         """
         cursor.execute(room_data_query, (month,))
     
-    else:  # ถ้าเลือก "ทั้งหมด" ให้ดึงข้อมูลล่าสุดของแต่ละห้อง
+    else: 
         room_data_query = """
             SELECT 
                 r.id AS room_id,
@@ -269,7 +268,6 @@ def detect():
         }
     })
 
-# --- Endpoint สำหรับบันทึกข้อมูลมิเตอร์ลงฐานข้อมูล ---
 @app.route("/insert_reading", methods=["POST"])
 def insert_reading():
     data = request.json
@@ -284,14 +282,14 @@ def insert_reading():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # ค้นหา room_id จากตาราง rooms โดยใช้ room_code
+
         cursor.execute("SELECT id FROM rooms WHERE room_code = %s", (room_code,))
         room = cursor.fetchone()
         if not room:
             return jsonify({"status": "error", "message": "ไม่พบห้องที่เลือก"}), 404
         room_id = room["id"]
 
-        # ใช้ UPSERT (INSERT ON CONFLICT) ตามประเภทมิเตอร์
+
         if meter_type == "water":
             query = """
                 INSERT INTO utility_usage (room_id, record_date, water_reading)

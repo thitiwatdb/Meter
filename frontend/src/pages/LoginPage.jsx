@@ -19,7 +19,6 @@ function LoginPage({ setUsername, setRole }) {
       .then((response) => {
         console.log("API Response:", response.data);
         if (response.data.status === "success") {
-          console.log("Navigating to admin");
           alert("ล็อกอินสำเร็จ");
 
           localStorage.setItem("username", response.data.username);
@@ -30,8 +29,10 @@ function LoginPage({ setUsername, setRole }) {
 
           if (response.data.role === "admin") {
             navigate("/admin");
+            console.log("Navigating to admin");
           } else {
             navigate("/user");
+            console.log("Navigating to user");
           }
         }
       })
@@ -41,6 +42,7 @@ function LoginPage({ setUsername, setRole }) {
           error.response ? error.response.data : error.message
         );
         setMessage("Login failed. Please check your username and password.");
+        alert("ล็อกอินไม่สำเร็จ")
       });
   }
 
