@@ -16,7 +16,7 @@ function UserDashboard({ username, role,setUsername,setRole }) {
   return (
     <div>
       <h1>User Dashboard</h1>
-      <p>ยินดีต้อนรับ, {username || "ผู้ใช้ทั่วไป"} 🎉</p>
+      <p>ยินดีต้อนรับ, {username || "ผู้ใช้ทั่วไป"} </p>
       <p>Role: {role}</p>
       <button onClick={handleLogout}>Logout</button>
     </div>

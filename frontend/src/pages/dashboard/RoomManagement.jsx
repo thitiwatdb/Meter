@@ -6,12 +6,12 @@ function RoomManagement() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedMonth, setSelectedMonth] = useState(""); // เก็บเดือนที่เลือก
+  const [selectedMonth, setSelectedMonth] = useState(""); 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchRoomData();
-  }, [selectedMonth]); // เรียก API ใหม่เมื่อเปลี่ยนเดือน
+  }, [selectedMonth]); 
 
   const fetchRoomData = () => {
     setLoading(true);
@@ -19,15 +19,15 @@ function RoomManagement() {
   
     axios
       .get("http://localhost:5000/admin/roommanagement", {
-        params: { month: selectedMonth || null }, // ส่งค่า null ถ้าเลือก "ทั้งหมด"
+        params: { month: selectedMonth || null }, 
         withCredentials: true,
       })
       .then((response) => {
-        console.log("📡 ข้อมูลจาก API:", response.data);
+        console.log(" ข้อมูลจาก API:", response.data);
         setRooms(response.data.rooms || []);
       })
       .catch((error) => {
-        console.error("❌ Error fetching room data:", error);
+        console.error("Error fetching room data:", error);
         setError("ไม่สามารถโหลดข้อมูลห้องพักได้");
       })
       .finally(() => {
@@ -48,7 +48,7 @@ function RoomManagement() {
       <h1>Room Management</h1>
       <button onClick={handleBack}>Back</button>
 
-      {/* ตัวเลือกเดือน */}
+      {}
       <div style={{ marginTop: "20px" }}>
         <label>เลือกเดือน: </label>
         <select

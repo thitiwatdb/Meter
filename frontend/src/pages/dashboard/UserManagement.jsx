@@ -15,7 +15,6 @@ function UserManagement() {
   const [addRole, setAddRole] = useState("");
   const navigate = useNavigate();
 
-  // ดึงข้อมูลผู้ใช้จาก API
   function fetchUsers() {
     setLoading(true);
     axios
@@ -37,7 +36,6 @@ function UserManagement() {
     fetchUsers();
   }, []);
 
-  // ฟังก์ชันแก้ไขรหัสผ่าน
   function handleEdit(userId) {
     setEditingUserId(userId);
     setNewPassword("");
@@ -71,7 +69,6 @@ function UserManagement() {
       });
   }
 
-  // ฟังก์ชันเพิ่มผู้ใช้
   function handleAddUser(e) {
     e.preventDefault();
     if (!addFirstname || !addLastname || !addUsername || !addPassword || !addRole) {
@@ -107,7 +104,6 @@ function UserManagement() {
       });
   }
 
-  // ฟังก์ชันลบผู้ใช้
   function handleDeleteUser(userId) {
     if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้รายนี้?")) {
       return;
@@ -129,7 +125,7 @@ function UserManagement() {
       });
   }
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p>Loading</p>;
   if (error) return <p>{error}</p>;
 
   return (

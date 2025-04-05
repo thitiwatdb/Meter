@@ -27,6 +27,8 @@ def login():
     data = request.json
     username = data.get("username")
     password = data.get("password")
+    
+    print("Request data:", data)
 
     if not username or not password:
         return jsonify({"status": "error", "message": "กรุณากรอก username และ password"}), 400
@@ -39,8 +41,7 @@ def login():
         user = cursor.fetchone()
 
         print("User data:", user)
-        print("Request data:", data)
-
+        
         if user and bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
             token = jwt.encode({
                 "username": user["username"],
@@ -48,7 +49,6 @@ def login():
                 "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
             }, SECRET_KEY, algorithm="HS256")
             response = make_response(jsonify({"status": "success", "username": user["username"], "role": user["role"]}))
-            print(response)
             response.set_cookie("token", token, httponly=True, secure=True, samesite="Strict")
             return response
         else:

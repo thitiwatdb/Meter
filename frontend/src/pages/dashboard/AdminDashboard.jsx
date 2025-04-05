@@ -46,7 +46,7 @@ function AdminDashboard({ username, role, setUsername, setRole }) {
           </div>
           <div className="m-1 p-2 bg-white shadow-md rounded-md flex flex-row justify-between text-blue-500">
             <div className="font-bold">
-              <h1>ยินดีต้อนรับ, {username || "ผู้ดูแลระบบ"} 🎉</h1>
+              <h1>ยินดีต้อนรับ, {username || "ผู้ดูแลระบบ"} </h1>
               <h1>Role: {role}</h1>
             </div>
             <div className="grid grid-cols-4 gap-5 text-xl text-blue-500">

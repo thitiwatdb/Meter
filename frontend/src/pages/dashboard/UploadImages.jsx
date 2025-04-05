@@ -4,19 +4,16 @@ export default function UploadImages() {
   const [images, setImages] = useState([]);
   const [imagesURL, setImagesURL] = useState([]);
   const [detectionResults, setDetectionResults] = useState({});
-  const [meterType, setMeterType] = useState("water"); // ค่าเริ่มต้นเป็นมิเตอร์น้ำ
+  const [meterType, setMeterType] = useState("water"); 
   const [roomCode, setRoomCode] = useState("");
   const [recordDate, setRecordDate] = useState("");
   const [confirmStatus, setConfirmStatus] = useState("");
 
   useEffect(() => {
     if (images.length < 1) return;
-    // สร้าง URL ชั่วคราวสำหรับ preview รูปภาพ
     const newImagesURL = images.map((image) => URL.createObjectURL(image));
     setImagesURL(newImagesURL);
-    // ล้างผลลัพธ์เดิม
     setDetectionResults({});
-    // เรียกตรวจจับสำหรับแต่ละรูป
     images.forEach((image) => {
       handleDetect(image);
     });
@@ -41,7 +38,6 @@ export default function UploadImages() {
   }
 
   async function handleConfirm() {
-    // ในตัวอย่างนี้ สมมติใช้ผลลัพธ์จากรูปแรก
     if (images.length === 0) {
       alert("กรุณาอัปโหลดรูปภาพ");
       return;
@@ -52,7 +48,6 @@ export default function UploadImages() {
       alert("ยังไม่มีผลลัพธ์จากการตรวจจับ");
       return;
     }
-    // สมมติใช้ค่า numeric_value จากผลลัพธ์ที่ได้
     const readingValue = detection.numeric_value;
     if (readingValue === null || readingValue === undefined) {
       alert("ไม่สามารถดึงค่าจากการตรวจจับได้");
@@ -65,7 +60,7 @@ export default function UploadImages() {
 
     const payload = {
       room_code: roomCode,
-      meter_type: meterType, // "water" หรือ "electricity"
+      meter_type: meterType,
       record_date: recordDate,
       reading_value: readingValue,
     };
@@ -126,14 +121,14 @@ export default function UploadImages() {
                   </p>
                 </div>
               ) : (
-                <p>Detecting...</p>
+                <p>Detecting</p>
               )}
             </div>
           );
         })}
       </div>
 
-      {/* ส่วนควบคุมสำหรับเลือกมิเตอร์, ห้อง และวันที่ */}
+      {}
       <div className="mt-4 p-4 bg-gray-100 rounded-md w-96">
         <h2 className="text-xl font-bold mb-2">รายละเอียดมิเตอร์</h2>
         <div className="mb-2">
